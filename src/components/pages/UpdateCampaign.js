@@ -210,7 +210,7 @@ const UpdateCampaign = ({ match }) => {
     const handleFormSubmit = (event) => {
         event.preventDefault();
         if (validateForm()) {
-            API.addUpdateInCampaign(id, formData)
+            API.updateCampaign(id, formData)
                 .then((res) => { // Set redirect state
                 })
                 .catch((err) => console.log(err));
