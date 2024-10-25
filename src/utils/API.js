@@ -5,9 +5,11 @@ const BASEURL =
 
 const BASEURL_CAMPAIGN = 'https://donate-backend-alpha.vercel.app/api/campaigns';
 const BASEURL_USER = 'https://donate-backend-alpha.vercel.app/api';
+const BASEURL_CATEGORIES = 'https://donate-backend-alpha.vercel.app/categories';
 
 // const BASEURL_CAMPAIGN = 'http://localhost:4000/api/campaigns';
 // const BASEURL_USER = 'http://localhost:4000/api';
+// const BASEURL_CATEGORIES = 'http://localhost:4000/api/categories';
 
 export default {
   searchnews: function (query) {
@@ -88,5 +90,17 @@ export default {
   addUpdateInCampaign: function(id, updateData) {
     return axios.post(BASEURL_CAMPAIGN + "/updates/" + id, updateData)
   },
+
+  getAllCategories: function() {
+    return axios.get(`${BASEURL_CATEGORIES}/all`);
+  },
+
+  createNewCategory: function(categoryData) {
+    return axios.post(`${BASEURL_CATEGORIES}/create`, categoryData);
+  },
+
+  campaignStats: function() {
+    return axios.get(`${BASEURL_CAMPAIGN}/campaign-stats`)
+  }
 
 };
