@@ -1,7 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, withRouter } from "react-router-dom";
 import { NavDropdown } from 'react-bootstrap';
 import styled from 'styled-components';
+import {
+  DashboardOutlined,
+  FundOutlined,
+  PlusCircleOutlined,
+  FileDoneOutlined,
+  UserOutlined,
+  SearchOutlined,
+} from '@ant-design/icons';
+import { color } from "three/webgpu";
 
 const Theme = {
     cardBackground: "#FFFFFF",
@@ -17,46 +26,38 @@ const Theme = {
     textDark: "#000000",
 };
 
-const NavbarContainer = styled.nav`
-  background-color: ${Theme.surface};
-  padding: 15px 15px; /* Increased padding for bubble effect */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+const SidebarContainer = styled.div`
   position: fixed;
-  top: 20px; /* Added margin-top for bubble navbar */
-  left: 50%;
-  transform: translateX(-50%); /* Center the navbar */
-  width: 1000px; /* Initially auto for bubble effect */
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 250px; /* Width of the sidebar */
+  background-color: #5cbf6d;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+  transform: translateX(-100%); /* Hide sidebar initially */
+  transition: transform 0.3s ease;
   z-index: 1000;
-  border-radius: 50px; /* Bubble effect */
-  transition: all 0.4s ease;
 
-  &.scrolled {
-    width: 100%; /* Full width on scroll */
-    border-radius: 0; /* Remove bubble effect */
-    background-color: ${Theme.background}; /* Change background on scroll */
-    padding: 10px; /* Adjust padding on scroll */
-    top: 0; /* Align to the top when scrolled */
-    transform: none; /* Remove transform when scrolled */
-    left: 0; /* Align to the left when scrolled */
+  &.open {
+    transform: translateX(0); /* Show sidebar */
   }
+`;
 
-  @media (max-width: 768px) {
-    padding: 10px; /* Less padding on mobile */
-    border-radius: 30px; /* Slightly rounded corners on mobile */
-    top: 10px; /* Adjust top position for mobile */
-    left: 20px; /* Align to the left for mobile */
-    transform: none; /* Remove transform for mobile view */
-    width: calc(100% - 40px); /* Full width with margins on mobile */
-    margin-left: auto; 
-    margin-right: auto; 
-    max-width: none; /* Remove max-width constraint for mobile */
-  }
+const Overlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  visibility: ${props => (props.isOpen ? 'visible' : 'hidden')};
+  opacity: ${props => (props.isOpen ? '1' : '0')};
+  transition: visibility 0s, opacity 0.3s ease;
 `;
 
 const NavContent = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column; /* Stack items vertically */
+  
 `;
 
 const Logo = styled(Link)`
@@ -68,153 +69,127 @@ const Logo = styled(Link)`
 `;
 
 const MenuButton = styled.button`
-  display: none;
-  background: none;
-  border: none;
-  color: #008044;
-  font-size: 24px;
+   position: absolute; /* Fixed position for the button */
+   top: 20px; /* Position at the top */
+   right: 20px; /* Position at the right */
+   background-color: transparent;
+   border: none;
+   z-index: 1100; /* Above sidebar */
+   cursor: pointer;
 
-   @media (max-width: 991px) {
-     display: block;
+   &:focus {
+       outline: none; /* Remove outline on focus */
+   }
+`;
+
+const SquareContainer = styled.div`
+   display: grid;
+   grid-template-columns: repeat(2, 20px); /* Two squares per row */
+   gap: 4px; /* Space between squares */
+`;
+
+const Square = styled.span`
+   display: block;
+   width: 20px; /* Width of each square */
+   height: 20px; /* Height of each square */
+   background-color: transparent; /* Transparent background */
+   border-radius: 8px; /* Curved corners */
+   border: 4px solid black; /* Thicker black border */
+
+   &:hover {
+       opacity:.8; /* Optional hover effect to indicate interactivity */
    }
 `;
 
 const MenuItems = styled.div`
    display: flex;
-   align-items: center;
+   flex-direction: column; /* Stack items vertically */
+   padding-top: 20px; /* Space between logo and menu items */
 
-   @media (max-width: 991px) {
-     display: ${props => (props.isOpen ? 'flex' : 'none')};
-     flex-direction: column;
-     align-items: flex-start;
-     position: absolute;
-     top: calc(100% + 10px); 
-     left: -20px; 
-     right: -20px; 
-     background-color:${Theme.surface}; 
-     padding:${props => (props.isOpen ? '20px' : '0')}; 
-     box-shadow:${props => (props.isOpen ? 'rgba(0,0,0,0.1) -1px -1px' : 'none')}; 
-   }
-`;
+   a {
+      padding:20px; 
+      text-decoration:none; 
+      color:#fff; 
+      transition:.3s;
+      font-weight: 600;
+      font-size: 21px;
 
-const commonFontStyles = `
-   font-size:${Theme.fontPrimary};
-   font-family:${Theme.fontPrimary};
-   font-weight:500;
-   color:${Theme.text};
-`;
-
-const StyledNavDropdown = styled(NavDropdown)`
-   .dropdown-toggle {
-     ${commonFontStyles}
-     padding:10px; 
-     transition:.3s; 
-
-     &:hover {
-       color:${Theme.primary} !important; 
-     }
-   }
-
-   .dropdown-menu {
-     background-color:${Theme.surface}; 
-     border:none; 
-     border-radius:.25rem; 
-     padding:.5rem; 
-   }
-
-   .dropdown-item {
-     ${commonFontStyles}
-     transition:.3s; 
-
-     &:hover {
-       background-color:${Theme.primary}; 
-       color:${Theme.background}; 
-     }
-   }
-`;
-
-const NavLink = styled(Link)`
-   ${commonFontStyles}
-   text-decoration:none;
-   padding:10px 15px;
-   transition=color .3s;
-
-   &:hover {
-       color:${Theme.primary};
+      &:hover {
+         color:${Theme.primary};
+      }
    }
 `;
 
 const ContactButton = styled(Link)`
-   background-color:rgb(24, 65, 45); 
+   background-color:${Theme.accent}; 
    color:${Theme.background}; 
    padding:.5rem; 
    border-radius:.25rem; 
    text-decoration:none; 
 
    &:hover {
-       background-color:${Theme.accent}; 
+       background-color:${Theme.primary}; 
        color:${Theme.text}; 
    }
 `;
 
 const Navbar = ({ history }) => {
-    const isLoggedIn = !!sessionStorage.getItem('userData');
-
     const [isOpen, setIsOpen] = useState(false);
-    const [scrolled, setScrolled] = useState(false);
-
-    useEffect(() => {
-        const handleScroll = () => {
-            setScrolled(window.scrollY > 50); // Change threshold as needed
-        };
-
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
 
     const toggleNav = () => setIsOpen(!isOpen);
 
-    // Retrieve user data from local storage
     const userData = JSON.parse(sessionStorage.getItem('userData'));
     const isAdmin = userData ? userData.isAdmin : false;
 
     const handleLogout = () => {
         sessionStorage.removeItem('userData');
         history.push('/');
+        setIsOpen(false); // Close the sidebar on logout
     };
 
     return (
-        <NavbarContainer className={scrolled ? 'scrolled' : ''}>
-            <NavContent>
-                <Logo to="/">DONATION</Logo>
-                <MenuButton onClick={toggleNav}>☰</MenuButton>
-                <MenuItems isOpen={isOpen}>
-                    <NavLink to="/">Home</NavLink>
-                    <NavLink to="/create-campaign">Start a Fundraiser</NavLink>
-                    <NavLink to="/donate">Donate</NavLink>
-                    {isAdmin && <NavLink to="/reviewCampaigns">Review Campaigns</NavLink>}
-                    <NavLink to="/CampaignDetails">Campaign Details</NavLink>
-                    <StyledNavDropdown title="Campaign Search" id="charity-nav-dropdown">
-                        <NavDropdown.Item as={Link} to="/Map">By Map</NavDropdown.Item>
-                        <NavDropdown.Item as={Link} to="/Search">By Name</NavDropdown.Item>
-                    </StyledNavDropdown>
-                    <StyledNavDropdown title={sessionStorage.getItem('userData') ? JSON.parse(sessionStorage.getItem('userData')).name : 'Account'} id="account-nav-dropdown">
-                        {sessionStorage.getItem('userData') ? (
-                            <React.Fragment>
-                                <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
-                            </React.Fragment>
-                        ) : (
-                            <React.Fragment>
-                                <NavDropdown.Item as={Link} to="/sign-up">Sign Up</NavDropdown.Item>
-                                <NavDropdown.Divider />
-                                <NavDropdown.Item as={Link} to="/login">Login</NavDropdown.Item>
-                            </React.Fragment>
-                        )}
-                    </StyledNavDropdown>
-                    <ContactButton to="/contact">Contact</ContactButton>
-                </MenuItems>
-            </NavContent>
-        </NavbarContainer>
+        <>
+            <MenuButton onClick={toggleNav}>
+                <SquareContainer>
+                    <Square />
+                    <Square />
+                    <Square />
+                    <Square />
+                </SquareContainer>
+            </MenuButton>
+            <Overlay isOpen={isOpen} onClick={toggleNav} />
+            <SidebarContainer className={isOpen ? 'open' : ''}>
+                <NavContent>
+                    {/* <Logo to="/"> Admin</Logo> */}
+                    <MenuItems>
+                        <Link to="/"><DashboardOutlined /> Dashboard</Link>
+                        <Link to="/create-campaign"><PlusCircleOutlined /> Start a Fundraiser</Link>
+                        <Link to="/donate"><FundOutlined /> Campaigns</Link>
+                        {isAdmin && <Link to="/reviewCampaigns"> <FileDoneOutlined /> Review Campaigns</Link>}
+                        <Link to="/CampaignDetails"><FileDoneOutlined /> Campaign Details</Link>
+                        {isAdmin && <Link to="/create-category"><UserOutlined /> Create Category</Link>}
+                        <NavDropdown title="Campaign Search" id="charity-nav-dropdown">
+                            <NavDropdown.Item as={Link} to="/Map" style={{color:'black'}}>By Map</NavDropdown.Item>
+                            <NavDropdown.Item as={Link} to="/Search" style={{color:'black'}}>By Name</NavDropdown.Item>
+                        </NavDropdown>
+                        <NavDropdown title={sessionStorage.getItem('userData') ? JSON.parse(sessionStorage.getItem('userData')).name : 'Account'} id="account-nav-dropdown">
+                            {sessionStorage.getItem('userData') ? (
+                                <React.Fragment>
+                                    <NavDropdown.Item onClick={handleLogout} style={{color:'black'}}>Logout</NavDropdown.Item>
+                                </React.Fragment>
+                            ) : (
+                                <React.Fragment>
+                                    <NavDropdown.Item as={Link} to="/sign-up" style={{color:'black'}}>Sign Up</NavDropdown.Item>
+                                    <NavDropdown.Divider />
+                                    <NavDropdown.Item as={Link} to="/login" style={{color:'black'}}>Login</NavDropdown.Item>
+                                </React.Fragment>
+                            )}
+                        </NavDropdown>
+                        {/* <ContactButton to="/contact">Contact</ContactButton> */}
+                    </MenuItems>
+                </NavContent>
+            </SidebarContainer>
+        </>
     );
 };
 
