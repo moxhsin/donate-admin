@@ -18,12 +18,15 @@ import ReviewCampaigns from './components/pages/ReviewCampaigns';
 import SignUp from './components/pages/SignUp';
 import SignIn from './components/pages/SignIn';
 import CampaignDetails from './components/pages/CampaignDetails';
+import CreateCategory from './components/pages/CreateCategory';
+import UniqueDonorsPage from './components/pages/UniqueDonorsPage';
 
 
 import "./App.css";
 import SearchNews from "./components/pages/News";
 import DonateDetails from './components/pages/DonateDetails';
 import UpdateCampaign from './components/pages/UpdateCampaign';
+import UniqueDonorsTable from './components/pages/UniqueDonorsTable';
 
 class App extends Component {
   
@@ -44,6 +47,9 @@ class App extends Component {
                 <Route path="/donation" exact={true} component={Donation} />
                 <Route path="/reviewCampaigns" exact={true} component={ReviewCampaigns} />
                 <Route path="/CampaignDetails" exact={true} component={CampaignDetails} />
+                <Route path="/create-category" exact={true} component={CreateCategory} />
+                <Route path="/UniqueDonorsTable" exact={true} component={UniqueDonorsTable} />
+                <Route path="/unique-donors" component={UniqueDonorsPage} />
                 <Route path="/Charity" exact={true} component={Charity} />
                 <Route path="/Search" exact={true} component={Search} />
                 <Route path="/Saved" exact={true} component={Saved} />
